@@ -21,10 +21,10 @@ namespace PingPongServer
 
         public void CreateServerSocket()
         {
-            IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
-            IPAddress ipAddress = ipHostInfo.AddressList[0];
+            IPAddress ipa = IPAddress.Parse("10.1.0.17");
 
-            IPEndPoint ipe = new IPEndPoint(ipAddress, _port);
+
+            IPEndPoint ipe = new IPEndPoint(ipa, _port);
 
             _server = new Socket(ipe.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
@@ -36,40 +36,24 @@ namespace PingPongServer
             while(true)
             {
                 var connectionSocket = _server.Accept();
-                byte[] buffer = new byte[1024];
-                int bytesRecieved = connectionSocket.Receive(buffer);
-                //string dataRecieved = Encoding.ASCII.GetString(buffer, 0, bytesRecieved);
-                ChatWithClient(buffer, connectionSocket);
-                Console.WriteLine("8");
+                
+                Task task = new Task(() => ChatWithClient(connectionSocket));
+                task.Start();
             }
         }
-
-
-        //public Task Start()
-        //{
-
-        //}
-
-        public void RunServer()
+        public void ChatWithClient(Socket clientSocket)
         {
-            while(true)
+            try
             {
-                _counter++;
-                
-                
+                byte[] buffer = new byte[1024];
+                int bytesRecieved = clientSocket.Receive(buffer);
+                string stringData = Encoding.ASCII.GetString(buffer);
+                PrintContent(stringData);
+                SendToClient(stringData, clientSocket);
+            }catch(Exception e)
+            {
+                Console.WriteLine("Client disconnected");
             }
-        }
-
-        public void StartListening()
-        {
-            
-        }
-
-        public void ChatWithClient(byte[] dataFromClient, Socket clientSocket)
-        {
-            string stringData = Encoding.ASCII.GetString(dataFromClient);
-            PrintContent(stringData);
-            SendToClient(stringData, clientSocket);
         }
 
         public void PrintContent(string dataFromClient)
@@ -81,7 +65,6 @@ namespace PingPongServer
         {
             byte[] data = Encoding.ASCII.GetBytes(dataToSend);
             clientSocket.Send(data);
-            clientSocket.Close();
         }
     }
 }

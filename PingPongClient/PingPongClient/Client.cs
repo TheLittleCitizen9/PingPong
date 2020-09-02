@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -17,24 +18,34 @@ namespace PingPongClient
             _bytesReceived = new Byte[256];
         }
 
-        public void RunClient(string userInput)
+        public void RunClient()
         {
-            DefineIpPort(userInput);
-            ConnectToServer();
-            SendValueToServer();
-            WaitToValueFromServer();
+            //string userInput = Console.ReadLine();
+            //DefineIpPort(userInput);
+            var ipa = GetServerDetails();
+            
+            while(true)
+            {
+                ConnectToServer(ipa);
+                SendValueToServer();
+                WaitToValueFromServer();
+            }
         }
 
-        public void DefineIpPort(string userInput)
+        public IPAddress GetServerDetails()
         {
-            _ip = userInput.Split(':')[0];
-            _port = int.Parse(userInput.Split(':')[1]);
-        }
-
-        public void ConnectToServer()
-        {
+            Console.WriteLine("Enter IP");
+            _ip = Console.ReadLine();
             IPAddress ipa = IPAddress.Parse(_ip);
 
+            Console.WriteLine("Enter PORT");
+            _port = int.Parse(Console.ReadLine());
+
+            return ipa;
+        }
+
+        public void ConnectToServer(IPAddress ipa)
+        {
             IPEndPoint ipe = new IPEndPoint(ipa, _port);
 
             _client = new Socket(ipe.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -42,25 +53,25 @@ namespace PingPongClient
             _client.Connect(ipe);
         }
 
+        
+
         public void SendValueToServer()
         {
+            Console.WriteLine("Enter data to send");
             string dataToSend = Console.ReadLine();
 
             byte[] data = Encoding.ASCII.GetBytes(dataToSend);
 
             _client.Send(data);
+
         }
 
         public void WaitToValueFromServer()
         {
-            int bytes = 0;
-            do
-            {
-                bytes = _client.Receive(_bytesReceived, _bytesReceived.Length, 0);
-                var valueFromServer = Encoding.ASCII.GetString(_bytesReceived, 0, bytes);
-                Console.WriteLine($"From Server: {valueFromServer}");
-            }
-            while (bytes > 0);
+            _client.Receive(_bytesReceived, _bytesReceived.Length, 0);
+            var valueFromServer = Encoding.ASCII.GetString(_bytesReceived);
+            Console.WriteLine($"From Server: {valueFromServer}");
+            _client.Close();
         }
     }
 }
