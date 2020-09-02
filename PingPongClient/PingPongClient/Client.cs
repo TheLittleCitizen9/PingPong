@@ -11,7 +11,8 @@ namespace PingPongClient
         private string _ip;
         private int _port;
         private Byte[] _bytesReceived;
-        private Socket _client;
+        private TcpClient _client;
+        private IPEndPoint _ipe;
 
         public Client()
         {
@@ -20,8 +21,6 @@ namespace PingPongClient
 
         public void RunClient()
         {
-            //string userInput = Console.ReadLine();
-            //DefineIpPort(userInput);
             var ipa = GetServerDetails();
             
             while(true)
@@ -46,11 +45,9 @@ namespace PingPongClient
 
         public void ConnectToServer(IPAddress ipa)
         {
-            IPEndPoint ipe = new IPEndPoint(ipa, _port);
+            _ipe = new IPEndPoint(ipa, _port);
 
-            _client = new Socket(ipe.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            _client.Connect(ipe);
+            _client = new TcpClient(_ip, _port);
         }
 
         
@@ -61,14 +58,15 @@ namespace PingPongClient
             string dataToSend = Console.ReadLine();
 
             byte[] data = Encoding.ASCII.GetBytes(dataToSend);
+            NetworkStream nwStream = _client.GetStream();
 
-            _client.Send(data);
-
+            nwStream.Write(data);
         }
 
         public void WaitToValueFromServer()
         {
-            _client.Receive(_bytesReceived, _bytesReceived.Length, 0);
+            NetworkStream nwStream = _client.GetStream();
+            nwStream.Read(_bytesReceived, 0, _bytesReceived.Length);
             var valueFromServer = Encoding.ASCII.GetString(_bytesReceived);
             Console.WriteLine($"From Server: {valueFromServer}");
             _client.Close();

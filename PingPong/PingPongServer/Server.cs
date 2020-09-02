@@ -10,8 +10,7 @@ namespace PingPongServer
     public class Server
     {
         private int _port;
-        private int _counter;
-        private Socket _server;
+        private TcpListener _server;
         private const string IP = "10.1.0.17";
 
         public Server()
@@ -25,27 +24,26 @@ namespace PingPongServer
             _port = int.Parse(Console.ReadLine());
             IPEndPoint ipe = new IPEndPoint(ipa, _port);
 
-            _server = new Socket(ipe.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _server = new TcpListener(ipa, _port);
 
-            _server.Bind(ipe);
-            _server.Listen(100);
+            _server.Start(100);
 
             Console.WriteLine("Server started");
 
             while(true)
             {
-                var connectionSocket = _server.Accept();
-                
+                var connectionSocket = _server.AcceptTcpClient();
                 Task task = new Task(() => ChatWithClient(connectionSocket));
                 task.Start();
             }
         }
-        public void ChatWithClient(Socket clientSocket)
+        public void ChatWithClient(TcpClient clientSocket)
         {
             try
             {
                 byte[] buffer = new byte[1024];
-                int bytesRecieved = clientSocket.Receive(buffer);
+                NetworkStream nwStream = clientSocket.GetStream();
+                int bytesRecieved = nwStream.Read(buffer);
                 string stringData = Encoding.ASCII.GetString(buffer);
                 PrintContent(stringData);
                 SendToClient(stringData, clientSocket);
@@ -60,10 +58,11 @@ namespace PingPongServer
             Console.WriteLine($"From Client: {dataFromClient}");
         }
 
-        public void SendToClient(string dataToSend, Socket clientSocket)
+        public void SendToClient(string dataToSend, TcpClient clientSocket)
         {
             byte[] data = Encoding.ASCII.GetBytes(dataToSend);
-            clientSocket.Send(data);
+            NetworkStream nwStream = clientSocket.GetStream();
+            nwStream.Write(data);
         }
     }
 }
