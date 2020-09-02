@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json;
 
-namespace PingPongServer
+namespace Person
 {
+    [Serializable]
     public class Person
     {
+        
         private string _name;
+        
         private int _age;
         public Person(string name, int age)
         {

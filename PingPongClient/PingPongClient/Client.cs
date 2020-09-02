@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace PingPongClient
 {
@@ -50,15 +50,23 @@ namespace PingPongClient
             _client = new TcpClient(_ip, _port);
         }
 
-        
-
         public void SendValueToServer()
         {
-            Console.WriteLine("Enter data to send");
-            string dataToSend = Console.ReadLine();
+            Console.WriteLine("Enter person name");
+            string name = Console.ReadLine();
+            Console.WriteLine("Enter person age");
+            int age = int.Parse(Console.ReadLine());
 
-            byte[] data = Encoding.ASCII.GetBytes(dataToSend);
+            Person.Person person = new Person.Person(name, age);
+
+            BinaryFormatter bf = new BinaryFormatter();
             NetworkStream nwStream = _client.GetStream();
+
+            MemoryStream ms = new MemoryStream();
+
+            bf.Serialize(ms, person);
+
+            byte[] data = ms.ToArray();
 
             nwStream.Write(data);
         }
@@ -67,8 +75,14 @@ namespace PingPongClient
         {
             NetworkStream nwStream = _client.GetStream();
             nwStream.Read(_bytesReceived, 0, _bytesReceived.Length);
-            var valueFromServer = Encoding.ASCII.GetString(_bytesReceived);
-            Console.WriteLine($"From Server: {valueFromServer}");
+
+            MemoryStream memStream = new MemoryStream();
+            var binForm = new BinaryFormatter();
+            memStream.Write(_bytesReceived, 0, _bytesReceived.Length);
+            memStream.Seek(0, SeekOrigin.Begin);
+            var person = binForm.Deserialize(memStream);
+
+            Console.WriteLine($"From Server: {person.ToString()}");
             _client.Close();
         }
     }

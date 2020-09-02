@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,10 +13,6 @@ namespace PingPongServer
         private int _port;
         private TcpListener _server;
         private const string IP = "10.1.0.17";
-
-        public Server()
-        {
-        }
 
         public void CreateServerSocket()
         {
@@ -45,7 +42,7 @@ namespace PingPongServer
                 NetworkStream nwStream = clientSocket.GetStream();
                 int bytesRecieved = nwStream.Read(buffer);
                 string stringData = Encoding.ASCII.GetString(buffer);
-                PrintContent(stringData);
+                PrintContent(buffer);
                 SendToClient(stringData, clientSocket);
             }catch(Exception e)
             {
@@ -53,9 +50,15 @@ namespace PingPongServer
             }
         }
 
-        public void PrintContent(string dataFromClient)
+        public void PrintContent(byte[] dataFromClient)
         {
-            Console.WriteLine($"From Client: {dataFromClient}");
+            BinaryFormatter formatter = new BinaryFormatter();
+            MemoryStream memStream = new MemoryStream();
+            var binForm = new BinaryFormatter();
+            memStream.Write(dataFromClient, 0, dataFromClient.Length);
+            memStream.Seek(0, SeekOrigin.Begin);
+            var person = binForm.Deserialize(memStream);
+            Console.WriteLine($"From Client: {person.ToString()}");
         }
 
         public void SendToClient(string dataToSend, TcpClient clientSocket)
