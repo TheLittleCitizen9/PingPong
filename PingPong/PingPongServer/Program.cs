@@ -7,7 +7,7 @@ namespace PingPongServer
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-            Server server = new Server(9000);
+            Server server = new Server();
             server.CreateServerSocket();
             Console.WriteLine("hi");
         }

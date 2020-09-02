@@ -12,18 +12,17 @@ namespace PingPongServer
         private int _port;
         private int _counter;
         private Socket _server;
+        private const string IP = "10.1.0.17";
 
-        public Server(int port)
+        public Server()
         {
-            _port = port;
-            _counter = 0;
         }
 
         public void CreateServerSocket()
         {
-            IPAddress ipa = IPAddress.Parse("10.1.0.17");
-
-
+            IPAddress ipa = IPAddress.Parse(IP);
+            Console.WriteLine("Enter PORT");
+            _port = int.Parse(Console.ReadLine());
             IPEndPoint ipe = new IPEndPoint(ipa, _port);
 
             _server = new Socket(ipe.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
